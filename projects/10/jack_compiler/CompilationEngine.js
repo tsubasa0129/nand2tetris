@@ -55,16 +55,35 @@ class CompilationEngine {
         機能:タグの生成を行い、トークンを更新する
     */
     execute_writing(){
-        //tgt_typeの小文字化
-        let lower_tgt_type = this.tgt_type.toLowerCase();
+        //tgtの変換
+        switch(this.tgt_type){
+            case "STRING_CONSTANT" :
+                this.tgt_type = "stringConstant";
+                this.tgt_token = this.tgt_token
+                    .slice(1)
+                    .slice(0,-1);
+                break;
+            case "INT_CONST" :
+                this.tgt_type = "integerConstant";
+                break;
+            case "KEYWORD" :
+                this.tgt_token = this.tgt_token.toLowerCase();
+            default :
+                this.tgt_type = this.tgt_type.toLowerCase();
+                break;
+        }
 
-        //keywordは小文字に直す必要がある
-        if(this.tgt_type === "KEYWORD"){
-            this.tgt_token = this.tgt_token.toLowerCase();
+        //xmlに表示不可能な形式の変換
+        if(this.tgt_token === "<"){
+            this.tgt_token = "&lt;";
+        }else if(this.tgt_token === ">"){
+            this.tgt_token = "&gt;";
+        }else if(this.tgt_token === "&"){
+            this.tgt_token = "&amp;"
         }
 
         //タグの書き込み処理
-        let tag = `<${lower_tgt_type}>${this.tgt_token}</${lower_tgt_type}>`;
+        let tag = `<${this.tgt_type}> ${this.tgt_token} </${this.tgt_type}>`;
         this.write_tag(tag);
 
         this.updateToken();
@@ -127,7 +146,7 @@ class CompilationEngine {
         //className
         this.terminalToken_exe("IDENTIFIER",null);
 
-        //"}"
+        //"{"
         this.terminalToken_exe("SYMBOL","{")
 
         //classVarDec* subroutineDec*(クラス変数、subroutineの定義を行う)を呼び出す。
@@ -203,7 +222,6 @@ class CompilationEngine {
         ●subroutineDecのコンパイルを可能とする
 
         ●改善検討
-        ・本来的にはエラーを検出する際には、具体的な情報を知る必要性があるため、具体的な判定を行いその結果を出力する必要があるのではないか
         ・subroutineNameの登録処理は一旦無視
     */
     compileSubroutine(){
@@ -254,7 +272,7 @@ class CompilationEngine {
                 break;
             }
             //varDec呼び出し
-            this.compileClassVarDec();
+            this.compileVarDec();
         }
 
         //statementsを呼び出すのみ
@@ -333,15 +351,14 @@ class CompilationEngine {
             }
         }
 
-        this.write_tag("</varDec>");
+        this.terminalToken_exe("SYMBOL",";");
+
         this.nest_level--;
+        this.write_tag("</varDec>");
     }
 
-    //ここからその他のstatementを呼び出すのか 
     /* 
         ●Statementsのコンパイルを可能とする(statementが0回以上)
-
-        ●改善検討
     */
     compileStatements(){
         this.write_tag("<statements>");
@@ -490,9 +507,6 @@ class CompilationEngine {
 
     /* 
         ●ifのコンパイルを可能とする
-
-        ●改善検討
-        
     */
     compileIf(){
         this.write_tag("<ifStatement>");
@@ -540,9 +554,6 @@ class CompilationEngine {
 
     /* 
         ●expressionのコンパイルを可能とする
-
-        ●改善検討
-        
     */
     compileExpression(){        
         this.write_tag("<expression>");
@@ -632,7 +643,7 @@ class CompilationEngine {
                 this.updateToken();
 
                 //tag作成
-                let tag = `<identifier>${tmp_token}</identifier>`;
+                let tag = `<identifier> ${tmp_token} </identifier>`;
                 this.write_tag(tag);
 
                 if(this.tgt_token === "(" || this.tgt_token === "."){
@@ -660,10 +671,6 @@ class CompilationEngine {
 
     /* 
         ●expressionListのコンパイルを可能とする
-
-        ●改善検討
-        ・一応これが呼び出された時点で引数の中身だと確定はしている
-        ・考え方としては、")"がくるまでかと
     */
     compileExpressionList(){
         this.write_tag("<expressionList>");
@@ -720,9 +727,6 @@ class CompilationEngine {
 
     /* 
         typeの処理を行う
-        ●引数
-            配列形式で受け取る。
-            内容は、typeに追加するtoken
 
         ●不足点
             クラスの有無を判定する機能がidentifier内に必要となるかも
@@ -750,35 +754,17 @@ class CompilationEngine {
             throw new Error();
         }
     }
-
-    //タグ作成とネストのレベル調整を行う関数(リファクタリング時に使用する)
-    container(tagName){
-        this.nest_level++;
-        this.write_tag(`<${tagName}>`);
-
-        //内包するメソッドを呼び出す
-
-        this.write_tag(`</${tagName}>`);
-        this.nest_level--;
-    }
 }
 
 module.exports = CompilationEngine;
 
 /* 
-    リファクタリングの最終形式は構文を配列形式にして、for文で回すようにするかもしれない
-
-    明日の予定
-    対応として複数のパターンが考えられる
+    変数等の対応
     ・コンパイルエラーを出力するのであれば、varName等に関しては、前定義済みのものでなければならない
     ・また対応するエラーを出力させる必要がある。
     ・変数のスコープ（不明なため、登録処理がわかっていない）
 
     この後の予定
     ・リファクタリング(特にterm)
-    ・continerの作成
     ・同プログラムをまとめる
-    ・タグの前後に空白
-    ・小文字に変換する（keyword）
-    →多分問題なく動作する。現状keywordをcontainerから出力する場合にのみ小文字変換ができている。なので、それ以外から出力されないかを確認
 */
