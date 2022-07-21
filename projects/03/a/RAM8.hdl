@@ -1,0 +1,34 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/RAM8.hdl
+
+/**
+ * Memory of 8 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM8 {
+    IN in[16], load, address[3];
+    OUT out[16];
+
+    PARTS:
+    // Put your code here:
+    DMux8Way(in=load,sel=address,a=outa,b=outb,c=outc,d=outd,e=oute,f=outf,g=outg,h=outh);
+    Register(in=in,load=outa,out=resa);
+    Register(in=in,load=outb,out=resb);
+    Register(in=in,load=outc,out=resc);
+    Register(in=in,load=outd,out=resd);
+    Register(in=in,load=oute,out=rese);
+    Register(in=in,load=outf,out=resf);
+    Register(in=in,load=outg,out=resg);
+    Register(in=in,load=outh,out=resh);
+    
+    //一応加味しておきたいのだけど、結果として内容を統合する必要がある気がしてきた。結果として返すべきものは16ビットのoutの値になるのだから
+    Mux8Way16(a=resa,b=resb,c=resc,d=resd,e=rese,f=resf,g=resg,h=resh,sel=address,out=out);
+    //その役割として上記のものを使う。loadビットが1のregisterに関しては、結果として書き換えられた新しいデータを返す。そしてその他のレジスタは元の保管されているものを返すようになっている。そして、同様に最後に選択してあげれば完了
+}
+
+//ちなみにloadが0の場合はaddressのビットを読み込みするようになる。1の時は選択した場所を書き換え、その値を出力する。
