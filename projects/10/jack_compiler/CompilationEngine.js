@@ -190,26 +190,22 @@ class CompilationEngine {
 
         /* varName (',' varName)* の処理 (これも複数回出現) */
         let i = 0;
-        do {
+        while(true){
             if(i % 2 === 0){
-                //ここでは、変数の登録処理を行う（ただし、identiferのみ）
-                this.terminalToken_exe("IDENTIFIER",null);
-
                 i++;
+                //varNameの処理
+                this.terminalToken_exe("IDENTIFIER",null);
                 continue;
             }
 
-            //i % 2 === 1 の処理
             if(this.tgt_token === ","){
+                i++;
                 //","の実行
                 this.terminalToken_exe(null,null);
-
-                i++;
             }else{
                 break;
             }
-
-        }while(true);
+        }
 
         //";"
         this.terminalToken_exe("SYMBOL",";");
@@ -566,7 +562,7 @@ class CompilationEngine {
                 this.compileTerm();
             }
 
-            //
+            //(op term)が0回以上
             if(op.includes(this.tgt_token)){
                 //op
                 this.terminalToken_exe(null,null);
@@ -613,9 +609,6 @@ class CompilationEngine {
                     //")"
                     this.terminalToken_exe("SYMBOL",")")
                     break;
-                }else if(this.tgt_token === ";"){
-                    //";"の際には、エラーを流さずに処理をスキップする。
-                    break;
                 }else{
                     //SYMBOLのtermはunaryop termの形、もしくは(expression)の形でなければならない
                     throw new Error();
@@ -626,14 +619,10 @@ class CompilationEngine {
                     this.terminalToken_exe(null,null);
                     break;
                 }else{
-                    console.log(this.tgt_token);
-                    console.log(this.tgt_type);
                     //keywordConstant以外のkeywordを使用することができない
                     throw new Error();
                 }
             case "STRING_CONSTANT" :
-                this.terminalToken_exe(null,null);
-                break;
             case "INT_CONST" :
                 this.terminalToken_exe(null,null);
                 break;
@@ -662,7 +651,8 @@ class CompilationEngine {
                     }
                 }
                 break;
-
+            default :
+                throw new Error();
         }
 
         this.nest_level--;
@@ -765,6 +755,5 @@ module.exports = CompilationEngine;
     ・変数のスコープ（不明なため、登録処理がわかっていない）
 
     この後の予定
-    ・リファクタリング(特にterm)
-    ・同プログラムをまとめる
+    ・termのリファクタリングを実行し次第最終テストを行い、11章に移行する
 */
