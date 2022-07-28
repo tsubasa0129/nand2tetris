@@ -1,3 +1,8 @@
+/* 
+    入力Xxx.jackに対して、Xxx.vmを生成する・
+    ちなみに、フォルダ名を指定した場合には、同フォルダ内にそれぞれのvmファイルを作成する
+*/
+
 const CompilationEngine = require("./CompilationEngine");
 
 const fs = require("fs");
@@ -27,7 +32,7 @@ if(file_exist){
         jack_files.forEach((file) => {
             //input,outputを定義する
             let input_path = path.join(file_path,file);
-            let output_path = path.join(file_path,file.replace(".jack","2.xml"));
+            let output_path = path.join(file_path,file.replace(".jack",".vm"));
 
             //クラスもしくは関数で記載する処理を実行する
             run_analyzer(input_path,output_path);
@@ -36,7 +41,7 @@ if(file_exist){
         //一回のみの処理を行うだけ（ただしjackかどうかの判定は必要になる）
         if(ext_validator(file_path,exts)){
             //クラスもしくは関数で記載する処理を実行する
-            let output_path = file_path.replace(".jack","2.xml");
+            let output_path = file_path.replace(".jack",".vm");
             run_analyzer(file_path,output_path);
         }else{
             throw new Error("指定したファイルはjackファイルではありません。");
