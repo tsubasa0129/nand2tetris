@@ -279,8 +279,7 @@ class CompilationEngine {
     /* 
         ●parameterListのコンパイルを可能とする(引数の箇所)
     */
-    compileParameterList(){
-        //まずは、primitiveとclassに分割して処理を行う        
+    compileParameterList(){   
         while(true){
             //引数が0個の場合
             if(this.tgt_token === ")"){
@@ -291,23 +290,13 @@ class CompilationEngine {
             let type = this.tgt_token;
             this.getType_process();
 
-            /* varName(引数の変数名)　*/
-            let varName = this.tgt_token;
-
-            this.judge_identifier();
-            this.SymbolTable.define(varName,type,"ARG");
-            this.write_varName("REGIST",this.tgt_token);
-            this.updateToken();
-
-            //symbolTableへの追加処理を行う
-            this.SymbolTable.define(varName,type,"ARG");
+            //varNameの登録処理
+            this.compile_varName(type,"ARG");
 
             //","の有無の判定
             if(this.tgt_token === ","){
                 this.terminalToken_exe(null,null);
-            }else{
-                break;
-            }        
+            }   
         }
     }
 
@@ -361,13 +350,8 @@ class CompilationEngine {
         //"let"
         this.terminalToken_exe(null,null);
 
-        //varName ①identifierかどうかの判定      
-        if(this.tgt_type !== "IDENTIFIER"){
-            //判定エラー
-            throw new Error();
-        }
-
-        //②書き込みを行う 
+        //判定と書き込みを行う 
+        this.judge_identifier();
         this.write_varName("USE",this.tgt_token);
         this.updateToken();
 
@@ -443,23 +427,17 @@ class CompilationEngine {
         ●expressionのコンパイルを可能とする
     */
     compileExpression(){        
-        let i = 0;
-        while(true){
-            if(i === 0){
-                i++;
-                this.compile_container("term");
-            }
+        //termの呼び出し
+        this.compile_container("term");
 
-            //(op term)が0回以上
-            if(op.includes(this.tgt_token)){
-                //op
-                this.terminalToken_exe(null,null);
-                
-                //term呼び出し
-                this.compile_container("term");
-            }else{
+        while(true){
+            if(!op.includes(this.tgt_token)){
                 break;
             }
+            //op
+            this.terminalToken_exe(null,null);
+
+            this.compile_container("term");
         }
     }
 
@@ -510,7 +488,7 @@ class CompilationEngine {
                 //tokenの保管を行う
                 if(this.tgt_token === "(" || this.tgt_token === "."){
                     //ここではidentifierの処理層に関してはここでは行わない
-                    this.subroutineCall(tmp_token); //ここで登録処理を行えばいいのではないか
+                    this.subroutineCall(tmp_token);
                 }else{
                     //varNameの処理を行う
                     this.write_varName("USE",tmp_token);
@@ -520,8 +498,8 @@ class CompilationEngine {
                         this.brackets_container(brackets.square,"expression");
                     }
                 }
-
                 break;
+
             default :
                 throw new Error();
         }
@@ -545,8 +523,6 @@ class CompilationEngine {
         }
     }
 
-    /* 以下、処置をまとめる際に利用する(そのため、containerを必要としない) */
-
     /* 
         インスタンス変数であるということを認識している必要があるのではないか
         変数の処理を無視
@@ -561,7 +537,6 @@ class CompilationEngine {
         }
 
         //tokenの書き込み処理を行う必要がある
-
         if(this.tgt_token === "("){
             //subroutineNameの処理
             this.write_subroutineName("USE",token);
@@ -586,10 +561,8 @@ class CompilationEngine {
             //"("か"."のみしか入らない
             throw new Error();
         }
-        
     }
 
-    
     /* 
         bracketで囲まれたtagの処理を行う
         例：　(expression) 等
@@ -609,11 +582,10 @@ class CompilationEngine {
         typeの処理を行う
     */
     getType_process(addType){
-        //分離ver
         if(this.tgt_type === "KEYWORD"){
             let type = primitive_type;
 
-            //addTypeっが存在する場合
+            //addTypeが存在する場合
             if(addType !== null){
                 type = primitive_type.concat(addType);
             }
@@ -640,33 +612,27 @@ class CompilationEngine {
         this.getType_process();
 
         /* varName (',' varName)* の処理 (これも複数回出現) */
-        let i = 0;
+        this.compile_varName(type,kind);
+
         while(true){
-            if(i % 2 === 0){
-                i++;
-
-                //処理内容としては、identifierかどうかの判定を行い、trueの場合はtokenを返す。falseの場合はthrow error
-                let varName = this.judge_identifier();
-
-                //OKなら登録を行う
-                this.SymbolTable.define(varName,type,kind);
-                //出力を行う処理
-                this.write_varName("REGIST",this.tgt_token);
-                this.updateToken();
-
-                continue;
-            }
-
-            if(this.tgt_token === ","){
-                i++;
-                //","の実行
-                this.terminalToken_exe(null,null);
-            }else{
+            if(this.tgt_token !== ","){
                 break;
             }
+            //","の実行
+            this.terminalToken_exe(null,null);
+            this.compile_varName(type,kind);
         }
     }
 
+    /* varNameの処理 */
+    compile_varName(type,kind){
+        let varName = this.judge_identifier();
+        this.SymbolTable.define(varName,type,kind);
+
+        //出力を行う処理
+        this.write_varName("REGIST",this.tgt_token);
+        this.updateToken(); //この処理をまとめるのなら、updateTokenの処理は分岐する必要がある
+    }
 
     /* 
         if分節の中で、登録の際の重複確認を行う。（スコープについての意識も必須）
@@ -731,26 +697,6 @@ class CompilationEngine {
 module.exports = CompilationEngine;
 
 /* 
-    このクラスの変更点
-    ①SymobolTableモジュールを使用可能とする
-    →変数登録処理と検索処理、そしてsubroutineの初期化を可能とする
-    ②VMWriterの使用可能とする
-
-
-    一応雛形はできたけど
-    そして、classNameと　subroutineNameにも同様の処理を施す
-
-    登録処理
-    compileClass -
-    検索等
-    type,subroutineCall
-
-    登録
-    compileSubroutine -
-    検索等
-    doStatement,subroutineCall
-
-
     現段階の問題点
     ①classNameとsubroutineNameの記録をする箇所が存在しない
     ②コードの可読性が低い点
