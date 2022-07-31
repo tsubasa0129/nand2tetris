@@ -18,17 +18,10 @@ class CompilationEngine {
         this.nest_level = 0;
 
         //ここで次のトークンの呼び出しを行う
-        if(this.tokenizer.hasMoreTokens()){
-            this.tokenizer.advance();
-        }
-
-        //以下二つのクラス変数は、advanceで更新をかける
-        this.tgt_type = this.tokenizer.tokenType();
-        this.tgt_token = "";
+        this.updateToken(); 
     
         //jackでは最初はCLASSから書かれていなければならない。（エラー処理を追加する）
-        if(this.tgt_type === "KEYWORD" && this.tokenizer.keyWord() === "CLASS"){
-            this.tgt_token = "CLASS";
+        if(this.tgt_token === "CLASS"){
             this.compileClass();
         }
     }
@@ -127,9 +120,6 @@ class CompilationEngine {
 
     /* 
         ●クラスのコンパイルが可能
-
-        ●改善検討
-        ・classNameの登録処理は一旦無視
     */
     compileClass(){
         this.write_tag("<class>");
@@ -691,9 +681,6 @@ class CompilationEngine {
 
     /* 
         typeの処理を行う
-
-        ●不足点
-            クラスの有無を判定する機能がidentifier内に必要となるかも
     */
     getType_process(addType){
         //分離ver
@@ -721,8 +708,6 @@ class CompilationEngine {
 
     /* 
         ●SymbolTableへの登録処理を行う。
-
-        ここに関しても変更する必要性が出てきた OKかも
     */
     add_symbolTable(kind){
         let type = this.tgt_type;
@@ -839,7 +824,8 @@ module.exports = CompilationEngine;
     検索等
     doStatement,subroutineCall
 
-    後ぱっと見重複部分の大部分をまとめることができそう
 
-    現段階ではclassとかの検索は踏み込めなさそう（type等への影響なし）
+    現段階の問題点
+    ①classNameとsubroutineNameの記録をする箇所が存在しない
+    ②コードの可読性が低い点
 */
