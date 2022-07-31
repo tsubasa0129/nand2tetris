@@ -22,7 +22,7 @@ class CompilationEngine {
     
         //jackでは最初はCLASSから書かれていなければならない。（エラー処理を追加する）
         if(this.tgt_token === "CLASS"){
-            this.compileClass();
+            this.compile_container("class");
         }
     }
 
@@ -333,23 +333,14 @@ class CompilationEngine {
         ●Statementsのコンパイルを可能とする(statementが0回以上)
     */
     compileStatements(){
-        //statementの呼び出し
-        if(["LET","IF","WHILE","DO","RETURN"].includes(this.tgt_token)){
-            while(true){
-                if(this.tgt_token === "LET"){
-                    this.compile_container("letStatement");
-                }else if(this.tgt_token === "IF"){
-                    this.compile_container("ifStatement");
-                }else if(this.tgt_token === "WHILE"){
-                    this.compile_container("whileStatement");
-                }else if(this.tgt_token === "DO"){
-                    this.compile_container("doStatement");
-                }else if(this.tgt_token === "RETURN"){
-                    this.compile_container("returnStatement");
-                }else{
-                    break;
-                }
+        while(true){
+            if(["LET","IF","WHILE","DO","RETURN"].includes(this.tgt_token)){
+                let tag = this.tgt_token.toLowerCase() + "Statement";
+                this.compile_container(tag);
+
+                continue;
             }
+            break;
         }
     }
 
@@ -415,9 +406,6 @@ class CompilationEngine {
 
     /* 
         ●returnのコンパイルを可能とする
-
-        ●改善検討
-        ・expression呼び出しが、0回もしくは1回なので、その柔軟性がexpressionにあるならば問題なしだけど、、、
     */
     compileReturn(){
         //return
