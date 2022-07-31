@@ -8,6 +8,8 @@ const op = ["+","-","*","/","&","|","<",">","="];
 const unaryop = ["-","~"];
 const KeywordConstant = ["TRUE","FALSE","NULL","THIS"];
 
+const brackets = {parentheses : ["(",")"],square : ["[","]"],curly : ["{","}"]};
+
 class CompilationEngine {
     constructor(input,output){
         this.SymbolTable = new SymbolTable();
@@ -247,14 +249,8 @@ class CompilationEngine {
         this.write_subroutineName("REGIST",this.tgt_token);
         this.updateToken();
 
-        //"("
-        this.terminalToken_exe("SYMBOL","(");
-
-        //parameterList
-        this.compile_container("parameterList");
-
-        //")"
-        this.terminalToken_exe("SYMBOL",")");
+        //(parameterList)
+        this.brackets_container(brackets.parentheses,"parameterList");
 
         //subroutineBodyの呼び出し
         this.compile_container("subroutineBody");
@@ -377,7 +373,7 @@ class CompilationEngine {
 
         //"["の判定を行い、必要なら[expression]を行う
         if(this.tgt_token === "["){
-            this.array_container();
+            this.brackets_container(brackets.square,"expression");
         }
 
         //"="
@@ -398,10 +394,10 @@ class CompilationEngine {
         this.terminalToken_exe(null,null);
 
         //(expression)
-        this.expression_container();
+        this.brackets_container(brackets.parentheses,"expression");
 
         //{statements}
-        this.block_container();
+        this.brackets_container(brackets.curly,"statements");
     }
 
     /* 
@@ -428,10 +424,10 @@ class CompilationEngine {
         this.terminalToken_exe(null,null);
 
         //(expression)
-        this.expression_container();
+        this.brackets_container(brackets.parentheses,"expression");
 
         //{statements}
-        this.block_container();
+        this.brackets_container(brackets.curly,"statements");
 
         //elseの判定を行う
         if(this.tgt_token === "ELSE"){
@@ -439,7 +435,7 @@ class CompilationEngine {
             this.terminalToken_exe(null,null);
 
             //{statements}
-            this.block_container();
+            this.brackets_container(brackets.curly,"statements");
         }
     }
 
@@ -487,7 +483,7 @@ class CompilationEngine {
                     break;
                 }else if(this.tgt_token === "("){
                     //(expression)
-                    this.expression_container();
+                    this.brackets_container(brackets.parentheses,"expression");
                     break;
                 }else{
                     //SYMBOLのtermはunaryop termの形、もしくは(expression)の形でなければならない
@@ -521,7 +517,7 @@ class CompilationEngine {
 
                     if(this.tgt_token === "["){
                         //[expression]の処理を行う
-                        this.array_container();
+                        this.brackets_container(brackets.square,"expression");
                     }
                 }
 
@@ -570,9 +566,8 @@ class CompilationEngine {
             //subroutineNameの処理
             this.write_subroutineName("USE",token);
 
-            this.terminalToken_exe("SYMBOL","(");
-            this.compile_container("expressionList");
-            this.terminalToken_exe("SYMBOL",")");
+            //(expressionList)
+            this.brackets_container(brackets.parentheses,"expressionList");
         }else if(this.tgt_token === "."){
             //varName|classNameの処理
             if(/[A-Z]/.test(token.charAt(0))){
@@ -584,9 +579,9 @@ class CompilationEngine {
             this.terminalToken_exe("SYMBOL",".");
             this.write_subroutineName("USE",this.tgt_token);
             this.updateToken();
-            this.terminalToken_exe("SYMBOL","(");
-            this.compile_container("expressionList");
-            this.terminalToken_exe("SYMBOL",")");
+
+            //(expressionList)
+            this.brackets_container(brackets.parentheses,"expressionList");
         }else{
             //"("か"."のみしか入らない
             throw new Error();
@@ -594,46 +589,20 @@ class CompilationEngine {
         
     }
 
+    
     /* 
-        ●[expression]を行う
+        bracketで囲まれたtagの処理を行う
+        例：　(expression) 等
     */
-    array_container(){
-        //"["
-        this.terminalToken_exe("SYMBOL","[");
+    brackets_container(bracketsType,tag){
+        //brackets_start
+        this.terminalToken_exe("SYMBOL",bracketsType[0]);
 
-        //expression呼び出し
-        this.compile_container("expression");
+        //tag呼び出し
+        this.compile_container(tag);
 
-        //"]"
-        this.terminalToken_exe("SYMBOL","]");
-    }
-
-    /* 
-        ●(expression)を行う
-    */
-    expression_container(){
-        //"("
-        this.terminalToken_exe("SYMBOL","(");
-
-        //expression呼び出し
-        this.compile_container("expression");
-
-        //")"
-        this.terminalToken_exe("SYMBOL",")");
-    }
-
-    /* 
-        ●{statements}を行う
-    */
-    block_container(){
-        //"{"
-        this.terminalToken_exe("SYMBOL","{");
-
-        //statements
-        this.compile_container("statements");
-
-        //"}"
-        this.terminalToken_exe("SYMBOL","}");
+        //brackets_end
+        this.terminalToken_exe("SYMBOL",bracketsType[1]);
     }
 
     /* 
