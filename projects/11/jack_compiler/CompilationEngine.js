@@ -118,13 +118,70 @@ class CompilationEngine {
         }
     }
 
+    /* container */
+    compile_container(tagName){
+        this.write_tag(`<${tagName}>`);
+        this.nest_level++;
+
+        switch(tagName){
+            case "class" :
+                this.compileClass();
+                break;
+            case "classVarDec" :
+                this.compileClassVarDec();
+                break;
+            case "subroutineDec" :
+                this.compileSubroutine();
+                break;
+            case "subroutineBody" :
+                this.compileSubroutineBody();
+                break;
+            case "parameterList" :
+                this.compileParameterList();
+                break;
+            case "varDec" :
+                this.compileVarDec();
+                break;
+            case "statements" :
+                this.compileStatements();
+                break;
+            case "doStatement" :
+                this.compileDo();
+                break;
+            case "letStatement" :
+                this.compileLet();
+                break;
+            case "whileStatement" :
+                this.compileWhile();
+                break;
+            case "returnStatement" :
+                this.compileReturn();
+                break;
+            case "ifStatement" :
+                this.compileIf();
+                break;
+            case "expression" :
+                this.compileExpression();
+                break;
+            case "term" :
+                this.compileTerm();
+                break;
+            case "expressionList" :
+                this.compileExpressionList();
+                break;
+            default :
+                //詳細は存在しないメソッド
+                throw new Error();
+        }
+
+        this.nest_level--;
+        this.write_tag(`</${tagName}>`);
+    }
+
     /* 
         ●クラスのコンパイルが可能
     */
     compileClass(){
-        this.write_tag("<class>");
-        this.nest_level++;
-
         //class
         this.terminalToken_exe(null,null);
 
@@ -144,27 +201,21 @@ class CompilationEngine {
 
             if(["STATIC","FIELD"].includes(this.tgt_token)){
                 //classVarDecの処理
-                this.compileClassVarDec();
+                this.compile_container("classVarDec");
             }else if(["CONSTRUCTOR","FUNCTION","METHOD"].includes(this.tgt_token)){
                 //subroutineDecの処理
-                this.compileSubroutine();
+                this.compile_container("subroutineDec");
             }else{
                 //エラー処理
                 throw new Error("コンパイルエラー発生要因");
             }
         }
-
-        this.nest_level--;
-        this.write_tag("</class>");
     }
 
     /* 
         ●classVarDecのコンパイルを可能とする
     */
     compileClassVarDec(){        
-        this.write_tag("<classVarDec>");
-        this.nest_level++;
-
         //("STATIC","FIELD")
         let kind = this.tgt_token;
         this.terminalToken_exe(null,null);
@@ -174,18 +225,12 @@ class CompilationEngine {
 
         //";"
         this.terminalToken_exe("SYMBOL",";");
-
-        this.nest_level--;
-        this.write_tag("</classVarDec>");
     }
 
     /* 
         ●subroutineDecのコンパイルを可能とする
     */
     compileSubroutine(){
-        this.write_tag("<subroutineDec>");
-        this.nest_level++;
-
         //('constructor' | 'function' | 'method')
         if(["CONSTRUCTOR","FUNCTION","METHOD"].includes(this.tgt_token)){
             this.terminalToken_exe(null,null);
@@ -206,22 +251,16 @@ class CompilationEngine {
         this.terminalToken_exe("SYMBOL","(");
 
         //parameterList
-        this.compileParameterList();
+        this.compile_container("parameterList");
 
         //")"
         this.terminalToken_exe("SYMBOL",")");
 
         //subroutineBodyの呼び出し
-        this.compileSubroutineBody();
-
-        this.nest_level--;
-        this.write_tag("</subroutineDec>");
+        this.compile_container("subroutineBody");
     }
 
     compileSubroutineBody(){
-        this.write_tag("<subroutineBody>");
-        this.nest_level++;
-
         //"{" 
         this.terminalToken_exe("SYMBOL","{");
 
@@ -231,27 +270,21 @@ class CompilationEngine {
                 break;
             }
             //varDec呼び出し
-            this.compileVarDec();
+            this.compile_container("varDec");
         }
 
         //statementsを呼び出すのみ
-        this.compileStatements();
+        this.compile_container("statements");
 
         //"}"
         this.terminalToken_exe("SYMBOL","}");
-
-        this.nest_level--;
-        this.write_tag("</subroutineBody>");
     }
 
     /* 
         ●parameterListのコンパイルを可能とする(引数の箇所)
     */
     compileParameterList(){
-        //まずは、primitiveとclassに分割して処理を行う
-        this.write_tag("<parameterList>");
-        this.nest_level++;
-        
+        //まずは、primitiveとclassに分割して処理を行う        
         while(true){
             //引数が0個の場合
             if(this.tgt_token === ")"){
@@ -280,18 +313,12 @@ class CompilationEngine {
                 break;
             }        
         }
-
-        this.nest_level--;
-        this.write_tag("</parameterList>");
     }
 
     /* 
         ●varDecのコンパイルを可能とする(ローカル変数の宣言の層)
     */
     compileVarDec(){
-        this.write_tag("<varDec>");
-        this.nest_level++;
-
         //"var"
         this.terminalToken_exe(null,null);
 
@@ -300,48 +327,36 @@ class CompilationEngine {
 
         //";"
         this.terminalToken_exe("SYMBOL",";");
-
-        this.nest_level--;
-        this.write_tag("</varDec>");
     }
 
     /* 
         ●Statementsのコンパイルを可能とする(statementが0回以上)
     */
     compileStatements(){
-        this.write_tag("<statements>");
-        this.nest_level++;
-
         //statementの呼び出し
         if(["LET","IF","WHILE","DO","RETURN"].includes(this.tgt_token)){
             while(true){
                 if(this.tgt_token === "LET"){
-                    this.compileLet();
+                    this.compile_container("letStatement");
                 }else if(this.tgt_token === "IF"){
-                    this.compileIf();
+                    this.compile_container("ifStatement");
                 }else if(this.tgt_token === "WHILE"){
-                    this.compileWhile();
+                    this.compile_container("whileStatement");
                 }else if(this.tgt_token === "DO"){
-                    this.compileDo();
+                    this.compile_container("doStatement");
                 }else if(this.tgt_token === "RETURN"){
-                    this.compileReturn();
+                    this.compile_container("returnStatement");
                 }else{
                     break;
                 }
             }
         }
-        
-        this.nest_level--;
-        this.write_tag("</statements>");
     }
 
     /* 
         doのコンパイルを可能とする
     */
     compileDo(){
-        this.write_tag("<doStatement>");
-        this.nest_level++;
-
         //"do"
         this.terminalToken_exe(null,null);
 
@@ -350,18 +365,12 @@ class CompilationEngine {
 
         //";"
         this.terminalToken_exe("SYMBOL",";");
-
-        this.nest_level--;
-        this.write_tag("</doStatement>");
     }
 
     /* 
         ●letのコンパイルを可能とする
     */
-    compileLet(){
-        this.write_tag("<letStatement>");
-        this.nest_level++;
-        
+    compileLet(){        
         //"let"
         this.terminalToken_exe(null,null);
 
@@ -384,22 +393,16 @@ class CompilationEngine {
         this.terminalToken_exe("SYMBOL","=");
 
         //expression呼び出し
-        this.compileExpression();
+        this.compile_container("expression");
 
         //";"
         this.terminalToken_exe("SYMBOL",";");
-
-        this.nest_level--;
-        this.write_tag("</letStatement>");
     }
 
     /* 
         whileのコンパイルを可能とする
     */
     compileWhile(){
-        this.write_tag("<whileStatement>");
-        this.nest_level++;
-
         //while
         this.terminalToken_exe(null,null);
 
@@ -408,9 +411,6 @@ class CompilationEngine {
 
         //{statements}
         this.block_container();
-
-        this.nest_level--;
-        this.write_tag("</whileStatement>");
     }
 
     /* 
@@ -420,31 +420,22 @@ class CompilationEngine {
         ・expression呼び出しが、0回もしくは1回なので、その柔軟性がexpressionにあるならば問題なしだけど、、、
     */
     compileReturn(){
-        this.write_tag("<returnStatement>");
-        this.nest_level++;
-
         //return
         this.terminalToken_exe(null,null);
 
         if(this.tgt_token !== ";"){
             //expression呼び出し
-            this.compileExpression();
+            this.compile_container("expression");
         }
 
         //";"
         this.terminalToken_exe("SYMBOL",";");
-
-        this.nest_level--;
-        this.write_tag("</returnStatement>");
     }
 
     /* 
         ●ifのコンパイルを可能とする
     */
     compileIf(){
-        this.write_tag("<ifStatement>");
-        this.nest_level++;
-
         //if
         this.terminalToken_exe(null,null);
 
@@ -462,23 +453,17 @@ class CompilationEngine {
             //{statements}
             this.block_container();
         }
-
-        this.nest_level--;
-        this.write_tag("</ifStatement>");
     }
 
     /* 
         ●expressionのコンパイルを可能とする
     */
     compileExpression(){        
-        this.write_tag("<expression>");
-        this.nest_level++;
-
         let i = 0;
         while(true){
             if(i === 0){
                 i++;
-                this.compileTerm();
+                this.compile_container("term");
             }
 
             //(op term)が0回以上
@@ -487,14 +472,11 @@ class CompilationEngine {
                 this.terminalToken_exe(null,null);
                 
                 //term呼び出し
-                this.compileTerm();
+                this.compile_container("term");
             }else{
                 break;
             }
         }
-
-        this.nest_level--;
-        this.write_tag("</expression>");
     }
 
     /* 
@@ -505,9 +487,6 @@ class CompilationEngine {
         ・identifierの処理を簡略化した。変数等の検索処理は未対応
     */
     compileTerm(){ //からの場合の対処を考えていない。
-        this.write_tag("<term>");
-        this.nest_level++;
-
         /* termの処理記述(tgt_typeを使用しないでもいいかなとも考えている) */
         switch(this.tgt_type){
             case "SYMBOL" :
@@ -516,7 +495,7 @@ class CompilationEngine {
                     this.terminalToken_exe(null,null);
 
                     //再帰還数
-                    this.compileTerm();
+                    this.compile_container("term");
                     break;
                 }else if(this.tgt_token === "("){
                     //(expression)
@@ -562,23 +541,16 @@ class CompilationEngine {
             default :
                 throw new Error();
         }
-
-        this.nest_level--;
-        this.write_tag("</term>");
     }
 
     /* 
         ●expressionListのコンパイルを可能とする
     */
     compileExpressionList(){
-        this.write_tag("<expressionList>");
-        this.nest_level++;
-
-        /* compileExpressionの処理記述 */
         if(this.tgt_token !==  ")"){
             while(true){
                 //expression呼び出し
-                this.compileExpression();
+                this.compile_container("expression");
 
                 if(this.tgt_token === ","){
                     this.terminalToken_exe("SYMBOL",",");
@@ -587,9 +559,6 @@ class CompilationEngine {
                 }
             }
         }
-        
-        this.nest_level--;
-        this.write_tag("</expressionList>");
     }
 
     /* 以下、処置をまとめる際に利用する(そのため、containerを必要としない) */
@@ -614,7 +583,7 @@ class CompilationEngine {
             this.write_subroutineName("USE",token);
 
             this.terminalToken_exe("SYMBOL","(");
-            this.compileExpressionList();
+            this.compile_container("expressionList");
             this.terminalToken_exe("SYMBOL",")");
         }else if(this.tgt_token === "."){
             //varName|classNameの処理
@@ -628,7 +597,7 @@ class CompilationEngine {
             this.write_subroutineName("USE",this.tgt_token);
             this.updateToken();
             this.terminalToken_exe("SYMBOL","(");
-            this.compileExpressionList();
+            this.compile_container("expressionList");
             this.terminalToken_exe("SYMBOL",")");
         }else{
             //"("か"."のみしか入らない
@@ -645,7 +614,7 @@ class CompilationEngine {
         this.terminalToken_exe("SYMBOL","[");
 
         //expression呼び出し
-        this.compileExpression();
+        this.compile_container("expression");
 
         //"]"
         this.terminalToken_exe("SYMBOL","]");
@@ -659,7 +628,7 @@ class CompilationEngine {
         this.terminalToken_exe("SYMBOL","(");
 
         //expression呼び出し
-        this.compileExpression();
+        this.compile_container("expression");
 
         //")"
         this.terminalToken_exe("SYMBOL",")");
@@ -673,7 +642,7 @@ class CompilationEngine {
         this.terminalToken_exe("SYMBOL","{");
 
         //statements
-        this.compileStatements();
+        this.compile_container("statements");
 
         //"}"
         this.terminalToken_exe("SYMBOL","}");
