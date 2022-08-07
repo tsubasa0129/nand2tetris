@@ -72,8 +72,6 @@ class SymbolTable {
     }
 
     varCount(kind){
-
-        //console.log(this.subroutine_symbol_table);
         switch(kind){
             case "STATIC":
                 return this.static_index;

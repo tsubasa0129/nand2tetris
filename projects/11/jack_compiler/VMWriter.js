@@ -23,10 +23,11 @@ class VMWriter {
             {kind : "VAR",vm_kind : "local"},
             {kind : "STATIC",vm_kind : "static"},
             {kind : "CONST",vm_kind : "constant"},
-            {kind : "var",vm_kind : "this"},
-            {kind : "var",vm_kind : "that"},
-            {kind : "var",vm_kind : "pointer"},
-            {kind : "TEMP",vm_kind : "temp"}
+            {kind : "THIS",vm_kind : "this"},
+            {kind : "THAT",vm_kind : "that"},
+            {kind : "POINTER",vm_kind : "pointer"},
+            {kind : "TEMP",vm_kind : "temp"},
+            {kind : "FIELD",vm_kind : "this"}
         ]
     }
 
