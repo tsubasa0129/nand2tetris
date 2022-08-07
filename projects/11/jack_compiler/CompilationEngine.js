@@ -18,6 +18,8 @@ class CompilationEngine {
 
         //class名の初期化
         this.current_class = "";
+        this.current_subroutineName = "";
+        this.score = 0;
 
         //ここで次のトークンの呼び出しを行う
         this.updateToken(); 
@@ -78,24 +80,6 @@ class CompilationEngine {
     /* container */
     compile_container(tagName){
         switch(tagName){
-            case "class" :
-                this.compileClass();
-                break;
-            case "classVarDec" :
-                this.compileClassVarDec();
-                break;
-            case "subroutineDec" :
-                this.compileSubroutine();
-                break;
-            case "subroutineBody" :
-                this.compileSubroutineBody();
-                break;
-            case "parameterList" :
-                this.compileParameterList();
-                break;
-            case "varDec" :
-                this.compileVarDec();
-                break;
             case "statements" :
                 this.compileStatements();
                 break;
@@ -117,11 +101,11 @@ class CompilationEngine {
             case "expression" :
                 this.compileExpression();
                 break;
-            case "term" :
-                this.compileTerm();
-                break;
             case "expressionList" :
                 this.compileExpressionList();
+                break;
+            case "parameterList" :
+                this.compileParameterList();
                 break;
             default :
                 //詳細は存在しないメソッド
@@ -137,7 +121,8 @@ class CompilationEngine {
         this.updateToken();
 
         //className
-        this.write_className("REGIST",this.tgt_token);
+        this.current_class = this.tgt_token;
+        this.updateToken();
 
         //"{"
         this.terminalToken_exe("SYMBOL","{")
@@ -181,6 +166,8 @@ class CompilationEngine {
         ●subroutineDecのコンパイルを可能とする
     */
     compileSubroutine(){
+        this.score = 0;
+        this.SymbolTable.startSubroutine();
         let routineType = this.tgt_token;
 
         //('constructor' | 'function' | 'method')
@@ -199,23 +186,10 @@ class CompilationEngine {
         let function_name = this.write_subroutineName("REGIST",this.tgt_token);
 
         //(parameterList)
-        this.terminalToken_exe("SYMBOL","(");
-        let arg_leng = this.compileParameterList();
-        this.terminalToken_exe("SYMBOL",")");
-
-        /* この時点でVMWriterが使用可能となる。必要となる情報は、functionName 引数の個数　(戻り値のデータ型) */
-        if(routineType === "METHOD"){
-            arg_leng++;
-        }
-
-        //functionの書き込み処理を行う
-        this.vmWriter.writeFunction(function_name,arg_leng);
-
-        //subroutineBodyの呼び出し
-        this.compileSubroutineBody();
-    }
-
-    compileSubroutineBody(){
+        this.brackets_container(brackets.parentheses,"parameterList");
+        
+        /* subroutineBodyの処理 */
+        
         //"{" 
         this.terminalToken_exe("SYMBOL","{");
 
@@ -227,6 +201,15 @@ class CompilationEngine {
             //varDec呼び出し
             this.compileVarDec();
         }
+
+        //初期化が必要となる変数の数を取得する
+        let varCount = this.SymbolTable.varCount("VAR");
+        if(routineType === "METHOD"){
+            varCount++;
+        }
+
+        //functionの書き込み処理を行う　例:function Main.main 0
+        this.vmWriter.writeFunction(function_name,varCount);
 
         //statementsを呼び出すのみ
         this.compileStatements();
@@ -272,7 +255,7 @@ class CompilationEngine {
         //"var"
         this.updateToken();
 
-        //呼び出し処理
+        //シンボルテーブルへの追加処理
         this.add_symbolTable("VAR");
 
         //";"
@@ -305,7 +288,7 @@ class CompilationEngine {
         this.subroutineCall();
 
         //この中でpop temp 0を行う
-        this.vmWriter.writePop("temp",0);
+        this.vmWriter.writePop("TEMP",0);
 
         //";"
         this.terminalToken_exe("SYMBOL",";");
@@ -320,10 +303,10 @@ class CompilationEngine {
 
         //判定と書き込みを行う 
         this.judge_identifier();
-        this.write_varName("USE",this.tgt_token);
+        let varStore = this.write_varName(this.tgt_token); //本来であれば、結果をreturnして、最後にそれをもとに代入を行う
         this.updateToken();
 
-        //"["の判定を行い、必要なら[expression]を行う
+        //"["の判定を行い、必要なら[expression]を行う(今回は扱わない)
         if(this.tgt_token === "["){
             this.brackets_container(brackets.square,"expression");
         }
@@ -332,24 +315,49 @@ class CompilationEngine {
         this.terminalToken_exe("SYMBOL","=");
 
         //expression呼び出し
-        this.compile_container("expression");
+        this.compileExpression();
 
         //";"
         this.terminalToken_exe("SYMBOL",";");
+
+        //最後に
+        this.vmWriter.writePop(varStore.kind,varStore.index);
     }
 
     /* 
         whileのコンパイルを可能とする
     */
     compileWhile(){
+        //ラベルの作成を行う
+        let L1 = this.create_label("while.loop");
+        let L2 = this.create_label("while.exit");
+
+        //vmCodeの書き込みを行う
+        this.vmWriter.writeLabel(L1);
+
         //while
         this.updateToken();
 
-        //(expression)
+        //(expression) これが分岐の条件になっているはず
         this.brackets_container(brackets.parentheses,"expression");
 
-        //{statements}
+        //反転を行う
+        this.vmWriter.writeArithmetic("~",{unary : true});
+        this.vmWriter.writeIf(L2);
+
+        //{statements} 
         this.brackets_container(brackets.curly,"statements");
+        this.vmWriter.writeGoto(L1);
+
+        //ラベルを作成する
+        this.vmWriter.writeLabel(L2);
+    }
+
+    create_label(place){
+        let label = `${place}.${this.current_subroutineName}.${this.current_class}${this.score}`;
+        this.score++;
+
+        return label;
     }
 
     /* 
@@ -367,7 +375,7 @@ class CompilationEngine {
 
         }else{
             //戻り値がないので0を返す
-            this.vmWriter.writePush("constant",0);
+            this.vmWriter.writePush("CONST",0);
         }
 
         //returnコマンドの記入
@@ -381,14 +389,30 @@ class CompilationEngine {
         ●ifのコンパイルを可能とする
     */
     compileIf(){
+        //ラベルの作成
+        let L1 = this.create_label("if.false");
+        let L2 = this.create_label("if-true");
+
         //if
         this.updateToken();
 
         //(expression)
         this.brackets_container(brackets.parentheses,"expression");
 
+        //結果の反転を行う
+        this.vmWriter.writeArithmetic("~",{unary : true});
+
+        //if-gotoコマンドの実装
+        this.vmWriter.writeIf(L1);
+
         //{statements}
         this.brackets_container(brackets.curly,"statements");
+        
+        //gotoコマンドの実装
+        this.vmWriter.writeGoto(L2);
+
+        //計算処理の前にラベルを付与
+        this.vmWriter.writeLabel(L1);
 
         //elseの判定を行う
         if(this.tgt_token === "ELSE"){
@@ -398,6 +422,9 @@ class CompilationEngine {
             //{statements}
             this.brackets_container(brackets.curly,"statements");
         }
+
+        //ラベルの付与
+        this.vmWriter.writeLabel(L2);
     }
 
     /* 
@@ -415,7 +442,7 @@ class CompilationEngine {
             let current_op = this.tgt_token;
             this.updateToken();
 
-            this.compile_container("term");
+            this.compileTerm();
 
             //opの出力をするべき
             this.vmWriter.writeArithmetic(current_op,{unary : false});
@@ -432,12 +459,14 @@ class CompilationEngine {
         switch(this.tgt_type){
             case "SYMBOL" :
                 if(unaryop.includes(this.tgt_token)){
-                    //unaryop
-                    this.vmWriter.writeArithmetic(this.tgt_token,{unary : true});
+                    let token = this.tgt_token;
                     this.updateToken();
 
                     //再帰還数
                     this.compileTerm();
+
+                    //unaryop
+                    this.vmWriter.writeArithmetic(token,{unary : true});
                     break;
                 }else if(this.tgt_token === "("){
                     //(expression)
@@ -449,7 +478,9 @@ class CompilationEngine {
                 }
             case "KEYWORD" :
                 if(KeywordConstant.includes(this.tgt_token)){
-                    //keywordConstant
+                    //keywordConstant 今回はここに該当する
+                    this.write_kc(this.tgt_token);
+
                     this.updateToken();
                     break;
                 }else{
@@ -460,7 +491,7 @@ class CompilationEngine {
                 //文字列を扱う必要があるけど、やり方は不明
             case "INT_CONST" :
                 //これで一応数値への対策はOK
-                this.vmWriter.writePush("constant",this.tgt_token);
+                this.vmWriter.writePush("CONST",this.tgt_token);
 
                 this.updateToken();
                 break;
@@ -475,7 +506,10 @@ class CompilationEngine {
                     this.subroutineCall(tmp_token);
                 }else{
                     //varNameの処理を行う
-                    this.write_varName("USE",tmp_token);
+                    let varStore = this.write_varName(tmp_token); //varStoreが返却される
+
+                    //とりあえずpushを行う。もし他の箇所でエラーが発生したら修正が必要になるけど
+                    this.vmWriter.writePush(varStore.kind,varStore.index);
 
                     if(this.tgt_token === "["){
                         //[expression]の処理を行う
@@ -486,6 +520,23 @@ class CompilationEngine {
 
             default :
                 throw new Error();
+        }
+    }
+
+    //これはpush以外にもpopの可能性もあるかもしれない
+    write_kc(token){
+        console.log(token)
+        switch(token){
+            case "TRUE" :
+                this.vmWriter.writePush("CONST",1);
+                this.vmWriter.writeArithmetic("-",{unary : true});
+                break;
+            case "FALSE" :
+            case "NULL" :
+                this.vmWriter.writePush("CONST",0);
+            case "THIS" :
+                //不明
+                break;
         }
     }
 
@@ -522,7 +573,7 @@ class CompilationEngine {
         if(token === undefined){
             token = this.tgt_token;
             this.updateToken();
-        }
+        } //token内にidentifierが格納されている状態
 
         //tokenの書き込み処理を行う必要がある
         if(this.tgt_token === "("){
@@ -532,13 +583,22 @@ class CompilationEngine {
             //(expressionList)
             this.brackets_container(brackets.parentheses,"expressionList");
         }else if(this.tgt_token === "."){
-            //現段階において、大文字小文字（判定機能に関しては、テーブルに登録されているかどうかで確認する）
+            let kind = this.SymbolTable.kindOf(token);
+            if(kind === "NONE"){
+                //classNameで確定する
+            }else{
+                //varNameで確定する
+            }
+
+
             this.terminalToken_exe("SYMBOL",".");
             let call_name = token + "." + this.tgt_token;
             this.updateToken();
 
             //(expressionList)
+            this.terminalToken_exe("SYMBOL","(");
             let arg_leng = this.compileExpressionList();
+            this.terminalToken_exe("SYMBOL",")");
 
             //expressionListの処理が終了後callを行う
             this.vmWriter.writeCall(call_name,arg_leng);
@@ -604,19 +664,17 @@ class CompilationEngine {
                 break;
             }
             //","の実行
-            this.terminalToken_exe(null,null); //SYMBOL,","ではないのか
+            this.terminalToken_exe("SYMBOL",",");
             this.compile_varName(type,kind);
         }
     }
 
-    /* varNameの処理 */
+    /* シンボルテーブルへの登録を行う */
     compile_varName(type,kind){
         let varName = this.judge_identifier();
         this.SymbolTable.define(varName,type,kind);
 
-        //出力を行う処理
-        this.write_varName("REGIST",this.tgt_token);
-        this.updateToken(); //この処理をまとめるのなら、updateTokenの処理は分岐する必要がある
+        this.updateToken();
     }
 
     /* 
@@ -634,32 +692,33 @@ class CompilationEngine {
         varName
         (引数)
         token : 取得箇所によって、使用するトークンの位置関係が異なるので、使用するトークンを引数として用いる
-        opt : "REGIST" | "USE"
     */
-    write_varName(opt,token){
-        let kind = this.SymbolTable.kindOf(token);
+    write_varName(token){
+        let varStore = {kind : "",index : ""};
+        varStore.kind = this.SymbolTable.kindOf(token); //変数名から属性を取得している（var,argとか）
 
-        if(kind === "NONE"){
+        if(varStore.kind === "NONE"){
             //エラー処理
             throw new Error();
         }
 
         //tagの作成
-        let index = this.SymbolTable.indexOf(token);
-        let tagName = kind + "_" + opt + "_" + index;
-        let tag = `<${tagName}>${token}</${tagName}>`;
+        varStore.index = this.SymbolTable.indexOf(token);
 
-        //tagを出力
-        this.write_tag(tag);
+        //属性(ともしかしたらindexも必要になるかもしれない)
+        return varStore;
     }
 
     /* 
         subroutine用 
         (引数)
         opt : "REGIST" | "USE"
+
+        今のところある意味がなさそうだけど、今後使用する可能性がないわけではないので、一応残す
     */
     write_subroutineName(opt,token){
         if(opt === "REGIST"){
+            this.current_subroutineName = token; 
             let function_name = this.current_class + "." + token;
             this.updateToken();
             return function_name;
@@ -667,23 +726,6 @@ class CompilationEngine {
             this.updateToken();
         }
     }
-
-    /* 
-        class用
-        (引数)
-        opt : "REGIST" | "USE"
-
-        コンパイラにするので、ここ自体が必要なさそうだけど、拡張の可能性を鑑みて、一応残しておく
-    */
-    write_className(opt,token){
-        if(opt === "REGIST"){
-            //classNameの登録
-            this.current_class = token;
-        }
-
-        this.updateToken();
-    }
-
 }
 
 module.exports = CompilationEngine;

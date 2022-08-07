@@ -17,6 +17,17 @@ class VMWriter {
             {op : "|",vm_op : "or"},
             {op : "~",vm_op : "not"}
         ];
+
+        this.vm_kind = [
+            {kind : "ARG",vm_kind : "argument"},
+            {kind : "VAR",vm_kind : "local"},
+            {kind : "STATIC",vm_kind : "static"},
+            {kind : "CONST",vm_kind : "constant"},
+            {kind : "var",vm_kind : "this"},
+            {kind : "var",vm_kind : "that"},
+            {kind : "var",vm_kind : "pointer"},
+            {kind : "TEMP",vm_kind : "temp"}
+        ]
     }
 
     write_vmCode(vmCode){
@@ -27,29 +38,31 @@ class VMWriter {
         イメージ的には変数利用の際に用いる　（push,pop共に）
     */
     writePush(Segment,Index){
-        let vmCode = `push ${Segment} ${Index}`;
+        let kind = this.get_vm_kind(Segment);
+        let vmCode = `push ${kind} ${Index}`;
         this.write_vmCode(vmCode);
     }
 
     writePop(Segment,Index){
-        let vmCode = `pop ${Segment} ${Index}`;
+        let kind = this.get_vm_kind(Segment);
+        let vmCode = `pop ${kind} ${Index}`;
         this.write_vmCode(vmCode);
     }
 
-    writeArithmetic(command,unary){
-        this.write_vmCode(this.get_vm_op(command,unary));
+    writeArithmetic(command,opt){
+        this.write_vmCode(this.get_vm_op(command,opt));
     }
 
     writeLabel(label){
-
+        this.write_vmCode(`label ${label}`);
     }
 
     writeGoto(label){
-
+        this.write_vmCode(`goto ${label}`);
     }
 
     writeIf(label){
-
+        this.write_vmCode(`if-goto ${label}`);
     }
 
     writeCall(name,nArgs){
@@ -77,8 +90,8 @@ class VMWriter {
     }
 
     /* 以下、オリジナルメソッド */
-    get_vm_op(op,unary){
-        if(unary === true && op === "-"){
+    get_vm_op(op,opt){
+        if(opt.unary === true && op === "-"){
             //符号反転の"-"の場合
             return "neg";
         }
@@ -89,6 +102,14 @@ class VMWriter {
         });
 
         return vmCode.vm_op;
+    }
+
+    get_vm_kind(kind){
+        let vmCode = this.vm_kind.find(arr => {
+            return arr.kind === kind;
+        });
+
+        return vmCode.vm_kind;
     }
 }
 

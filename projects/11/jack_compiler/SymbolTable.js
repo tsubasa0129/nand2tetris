@@ -29,8 +29,8 @@ class SymbolTable {
         //テーブルの雛形を作成
         let table = {
             name : name,
-            type : type,
-            kind : kind,
+            type : type, //データ型
+            kind : kind, //属性(var,fieldとか)
             index : 0
         }
 
@@ -72,6 +72,8 @@ class SymbolTable {
     }
 
     varCount(kind){
+
+        //console.log(this.subroutine_symbol_table);
         switch(kind){
             case "STATIC":
                 return this.static_index;
