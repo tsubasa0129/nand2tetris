@@ -20,6 +20,7 @@ class CompilationEngine {
         this.current_class = "";
         this.current_subroutineName = "";
         this.score = 0;
+        this.current_subroutineKind = "";
 
         //ここで次のトークンの呼び出しを行う
         this.updateToken(); 
@@ -201,6 +202,8 @@ class CompilationEngine {
         //functionの書き込み処理を行う　例:function Main.main 0
         this.vmWriter.writeFunction(function_name,varCount);
 
+        this.current_subroutineKind = routineType;
+
         if(routineType === "CONSTRUCTOR"){
             //メモリの割り当てを行う
             let index = this.SymbolTable.varCount("FIELD");
@@ -309,7 +312,12 @@ class CompilationEngine {
 
         if(this.tgt_token === "["){ //typeを受け取っていない
             //配列のベースアドレス(ポインタ)をpushする
+            if(this.current_subroutineKind === "METHOD" && varStore.kind === "ARG"){
+                varStore.index++;
+            }
+
             this.vmWriter.writePush(varStore.kind,varStore.index);
+
             this.terminalToken_exe("SYMBOL","[");
 
             //配列のindexをpushする
@@ -555,7 +563,11 @@ class CompilationEngine {
                     //varNameの処理を行う
                     let varStore = this.write_varName(tmp_token); //varStoreが返却される
 
-                    //とりあえずpushを行う。もし他の箇所でエラーが発生したら修正が必要になるけど
+                    if(this.current_subroutineKind === "METHOD" && varStore.kind === "ARG"){
+                        //argumentかつメソッドからの呼び出しの場合、+1をする
+                        varStore.index++;
+                    }
+
                     this.vmWriter.writePush(varStore.kind,varStore.index);
 
                     if(this.tgt_token === "["){
@@ -649,6 +661,11 @@ class CompilationEngine {
                 //varName.methodName(); ここではメソッドの処理を行う　ついでに引数の個数を増やす必要がある
                 let index = this.SymbolTable.indexOf(token);
                 let className = this.SymbolTable.typeOf(token);
+
+                if(this.current_subroutineKind === "METHOD" && kind === "ARG"){
+                    index++;
+                }
+
                 this.vmWriter.writePush(kind,index);
 
                 this.terminalToken_exe("SYMBOL",".");
