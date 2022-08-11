@@ -9,7 +9,7 @@ class VMWriter {
             {op : "+",vm_op : "add"},
             {op : "-",vm_op : "sub"},
             {op : "*",vm_op : "call Math.multiply 2"},
-            {op : "/",vm_op : "call Math.devide 2"},
+            {op : "/",vm_op : "call Math.divide 2"},
             {op : "=",vm_op : "eq"},
             {op : ">",vm_op : "gt"},
             {op : "<",vm_op : "lt"},
