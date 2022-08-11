@@ -27,3 +27,5 @@ class Main {
      return;
    }
 }
+
+サンプルバージョンではletStatementの際に一旦tempの一時領域に保管をしている

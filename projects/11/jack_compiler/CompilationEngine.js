@@ -307,22 +307,48 @@ class CompilationEngine {
         let varStore = this.write_varName(this.tgt_token); //本来であれば、結果をreturnして、最後にそれをもとに代入を行う
         this.updateToken();
 
-        //"["の判定を行い、必要なら[expression]を行う(今回は扱わない)
-        if(this.tgt_token === "["){
-            this.brackets_container(brackets.square,"expression");
+        if(this.tgt_token === "["){ //typeを受け取っていない
+            //配列のベースアドレス(ポインタ)をpushする
+            this.vmWriter.writePush(varStore.kind,varStore.index);
+            this.terminalToken_exe("SYMBOL","[");
+
+            //配列のindexをpushする
+            this.compileExpression();
+            this.terminalToken_exe("SYMBOL","]");
+
+            //add
+            this.vmWriter.writeArithmetic("+",{unary : false});
+
+            //pop pointer 1
+            //this.vmWriter.writePop("POINTER",1);
+            this.vmWriter.writePop("TEMP",1);
+
+            //"="
+            this.terminalToken_exe("SYMBOL","=");
+
+            //expression呼び出し
+            this.compileExpression();
+
+            //サンプルでは一時領域への保管をしていたので...
+            this.vmWriter.writePush("TEMP",1);
+            this.vmWriter.writePop("POINTER",1);
+            this.vmWriter.writePop("THAT",0);
+
+            //";"
+            this.terminalToken_exe("SYMBOL",";");
+        }else{
+            //"="
+            this.terminalToken_exe("SYMBOL","=");
+
+            //expression呼び出し
+            this.compileExpression();
+
+            //";"
+            this.terminalToken_exe("SYMBOL",";");
+
+            //最後に
+            this.vmWriter.writePop(varStore.kind,varStore.index);
         }
-
-        //"="
-        this.terminalToken_exe("SYMBOL","=");
-
-        //expression呼び出し
-        this.compileExpression();
-
-        //";"
-        this.terminalToken_exe("SYMBOL",";");
-
-        //最後に
-        this.vmWriter.writePop(varStore.kind,varStore.index);
     }
 
     /* 
@@ -486,7 +512,30 @@ class CompilationEngine {
                     throw new Error();
                 }
             case "STRING_CONSTANT" :
-                //文字列を扱う必要があるけど、やり方は不明
+                //文字列のコンパイルを行う(StringのAPIを用いる)
+                console.log(this.tgt_token)
+                let str_const = this.tgt_token.split("\"")[1];
+                console.log(str_const)
+                let length = str_const.length;
+
+                console.log(length)
+
+                //文字列の長さをpushする
+                this.vmWriter.writePush("CONST",length);
+                this.vmWriter.writeCall("String.new",1);
+
+                var encoder = new TextEncoder('utf-8');
+
+                let i = 0;
+                while(i < length){
+                    let text = str_const.charAt(i);
+                    let strCode = encoder.encode(text)[0];
+                    this.vmWriter.writePush("CONST",strCode);
+                    this.vmWriter.writeCall("String.appendChar",2);
+                    i++;
+                }
+                this.updateToken();
+                break;
             case "INT_CONST" :
                 //これで一応数値への対策はOK
                 this.vmWriter.writePush("CONST",this.tgt_token);
@@ -512,6 +561,10 @@ class CompilationEngine {
                     if(this.tgt_token === "["){
                         //[expression]の処理を行う
                         this.brackets_container(brackets.square,"expression");
+
+                        this.vmWriter.writeArithmetic("+",{unary : false});
+                        this.vmWriter.writePop("POINTER",1);
+                        this.vmWriter.writePush("THAT",0);
                     }
                 }
                 break;
