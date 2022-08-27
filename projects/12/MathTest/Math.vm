@@ -1,0 +1,377 @@
+function Math.init 0
+push constant 16
+call Array.new 1
+pop static 0
+push static 0
+push constant 0
+add
+pop temp 1
+push constant 1
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 1
+add
+pop temp 1
+push constant 2
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 2
+add
+pop temp 1
+push constant 4
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 3
+add
+pop temp 1
+push constant 8
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 4
+add
+pop temp 1
+push constant 16
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 5
+add
+pop temp 1
+push constant 32
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 6
+add
+pop temp 1
+push constant 64
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 7
+add
+pop temp 1
+push constant 128
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 8
+add
+pop temp 1
+push constant 256
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 9
+add
+pop temp 1
+push constant 512
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 10
+add
+pop temp 1
+push constant 1024
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 11
+add
+pop temp 1
+push constant 2048
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 12
+add
+pop temp 1
+push constant 4096
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 13
+add
+pop temp 1
+push constant 8192
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 14
+add
+pop temp 1
+push constant 16384
+push temp 1
+pop pointer 1
+pop that 0
+push static 0
+push constant 15
+add
+pop temp 1
+push constant 16384
+push constant 16384
+add
+push temp 1
+pop pointer 1
+pop that 0
+push constant 0
+return
+function Math.abs 0
+push argument 0
+push constant 0
+lt
+not
+if-goto if.false.abs.Math0
+push argument 0
+neg
+return
+goto if-true.abs.Math1
+label if.false.abs.Math0
+push argument 0
+return
+label if-true.abs.Math1
+function Math.multiply 3
+push constant 0
+pop local 0
+push constant 0
+pop local 2
+push argument 0
+pop local 1
+label while.loop.multiply.Math0
+push local 0
+push constant 16
+lt
+not
+if-goto while.exit.multiply.Math1
+push argument 1
+push local 0
+call Math.bit 2
+not
+if-goto if.false.multiply.Math2
+push local 2
+push local 1
+add
+pop local 2
+goto if-true.multiply.Math3
+label if.false.multiply.Math2
+label if-true.multiply.Math3
+push local 1
+push local 1
+add
+pop local 1
+push local 0
+push constant 1
+add
+pop local 0
+goto while.loop.multiply.Math0
+label while.exit.multiply.Math1
+push local 2
+return
+function Math.divide 4
+push argument 0
+call Math.abs 1
+pop local 1
+push argument 1
+call Math.abs 1
+pop local 2
+push argument 0
+push constant 0
+lt
+push argument 1
+or
+push constant 0
+lt
+not
+if-goto if.false.divide.Math0
+push argument 0
+push constant 0
+lt
+push argument 1
+and
+push constant 0
+lt
+not
+if-goto if.false.divide.Math2
+push constant 1
+pop local 3
+goto if-true.divide.Math3
+label if.false.divide.Math2
+push constant 1
+neg
+pop local 3
+label if-true.divide.Math3
+goto if-true.divide.Math1
+label if.false.divide.Math0
+push constant 1
+pop local 3
+label if-true.divide.Math1
+push local 2
+push local 1
+gt
+push local 2
+push constant 0
+lt
+or
+not
+if-goto if.false.divide.Math4
+push constant 0
+return
+goto if-true.divide.Math5
+label if.false.divide.Math4
+label if-true.divide.Math5
+push local 1
+push constant 2
+push local 2
+call Math.multiply 2
+call Math.divide 2
+pop local 0
+push local 1
+push constant 2
+push local 0
+call Math.multiply 2
+push local 2
+call Math.multiply 2
+sub
+push local 2
+lt
+not
+if-goto if.false.divide.Math6
+push local 3
+push constant 2
+call Math.multiply 2
+push local 0
+call Math.multiply 2
+return
+goto if-true.divide.Math7
+label if.false.divide.Math6
+push local 3
+push constant 2
+push local 0
+call Math.multiply 2
+push constant 1
+add
+call Math.multiply 2
+return
+label if-true.divide.Math7
+function Math.sqrt 3
+push constant 0
+pop local 0
+push constant 7
+pop local 1
+label while.loop.sqrt.Math0
+push local 1
+push constant 1
+neg
+gt
+not
+if-goto while.exit.sqrt.Math1
+push local 0
+push static 0
+push local 1
+add
+pop pointer 1
+push that 0
+add
+push local 0
+push static 0
+push local 1
+add
+pop pointer 1
+push that 0
+add
+call Math.multiply 2
+pop local 2
+push local 2
+push argument 0
+gt
+not
+push local 2
+push constant 0
+gt
+and
+not
+if-goto if.false.sqrt.Math2
+push local 0
+push static 0
+push local 1
+add
+pop pointer 1
+push that 0
+add
+pop local 0
+goto if-true.sqrt.Math3
+label if.false.sqrt.Math2
+label if-true.sqrt.Math3
+push local 1
+push constant 1
+sub
+pop local 1
+goto while.loop.sqrt.Math0
+label while.exit.sqrt.Math1
+push local 0
+return
+function Math.max 0
+push argument 0
+push argument 1
+lt
+not
+if-goto if.false.max.Math0
+push argument 1
+return
+goto if-true.max.Math1
+label if.false.max.Math0
+push argument 0
+return
+label if-true.max.Math1
+function Math.min 0
+push argument 0
+push argument 1
+lt
+not
+if-goto if.false.min.Math0
+push argument 0
+return
+goto if-true.min.Math1
+label if.false.min.Math0
+push argument 1
+return
+label if-true.min.Math1
+function Math.bit 0
+push argument 0
+push static 0
+push argument 1
+add
+pop pointer 1
+push that 0
+and
+push constant 0
+eq
+not
+not
+if-goto if.false.bit.Math0
+push constant 1
+neg
+return
+goto if-true.bit.Math1
+label if.false.bit.Math0
+push constant 0
+return
+label if-true.bit.Math1
