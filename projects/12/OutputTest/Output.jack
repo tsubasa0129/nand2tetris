@@ -18,9 +18,28 @@ class Output {
 
     // Character map for displaying characters
     static Array charMaps; 
+    static int line,column;
+    static int pixelX,pixelY;
+    static int addressX,addressY;
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
+        //行と列の定義
+        let line = 0;
+        let column = 0;
+
+        //ピクセル単位
+        let pixelX = 0;
+        let pixelY = 0;
+
+        //アドレス単位
+        let addressX = 0;
+        let addressY = 0;
+
+        //文字列のマッピングを初期化する
+        do Output.initMap();
+
+        return;
     }
 
     // Initializes the character map array
@@ -71,7 +90,7 @@ class Output {
         do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
         do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-        do Output.create(65,0,0,0,0,0,0,0,0,0,0,0);          // A ** TO BE FILLED **
+        do Output.create(65,12,30,51,51,63,51,51,51,51,0,0); // A
         do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
         do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
         do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -176,28 +195,129 @@ class Output {
     /** Moves the cursor to the j-th column of the i-th row,
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
+        let line = i;
+        let column = j;
+
+        //gridの範囲は　line * 8 <= pixelX <= line * 8 + 7 , column * 11 <= pixelY <= column * 11 + 10
+        let pixelX = j * 8;
+        let pixelY = i * 11;
+
+        //現在のメモリ位置を指定
+        let addressX = j / 2;
+        let addressY = i * 11 * 32;
+
+        do Screen.setColor(false);
+        do Screen.drawRectangle(pixelX,pixelY,pixelX+7,pixelY+10);
+        do Screen.setColor(true);
+
+        return;
+        
     }
 
     /** Displays the given character at the cursor location,
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
+        //カーソルが位置する場所にcを出力し、カーソルの場所を一列進ませる
+        var int judgeState;
+        var int i;
+        var Array bitMap;
+        var int address,memoryVal,new_memoryVal;
+
+        //columnがメモリのどの位置にいるのかを判定する
+        let judgeState = column - ((column / 2) * 2);
+
+        //ループ回数を指定
+        let i = 0;
+
+        //11桁のビットマップを取得する
+        let bitMap = Output.getMap(c);
+
+        while(i < 12){
+            //操作を行うメモリのアドレスを取得する
+            let address = 16384 + addressX + addressY + (32 * i);
+
+            //メインメモリから値を取得する
+            let memoryVal = Memory.peek(address);
+
+            //入れ替えの作業を行う
+            if(judgeState = 0){
+                //指定したメモリアドレスの前半8ビットを書き換える
+                let new_memoryVal = memoryVal | bitMap[i];
+            }else{
+                //指定したメモリアドレスの後半8ビットを書き換える
+                let new_memoryVal = memoryVal | (bitMap[i] * 256);
+            }
+
+            //新しいvalueをメモリに設定する
+            do Memory.poke(address,new_memoryVal);
+            let i = i + 1;
+        }
+
+        //カーソルの場所を一列先に進ませる
+        if(column < 63){
+            //一列先へと進める
+            do Output.moveCursor(line,column+1);
+        }else{
+            if(line < 22){
+                do Output.moveCursor(line+1,0);
+            }else{
+                do Output.moveCursor(0,0);
+            }
+        }
+
+        return;
     }
 
     /** displays the given string starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printString(String s) {
+        var int i;
+        let i = 0;
+
+        //単純にprintChar(1文字の書き込み)を回数分繰り返すのみ
+        while(i < s.length()){
+            do Output.printChar(s.charAt(i));
+            let i = i + 1;
+        }
+
+        return;
     }
 
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
+        var String str;
+        let str = String.new(7);
+
+        //int型に変換し、複数文字列の出力処理を呼び出す
+        do str.setInt(i);
+        do Output.printString(str);
+
+        return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
+        //カーソルの位置を次の行に設定するのみ
+        do Output.moveCursor(line+1,0);
+
+        return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
+        if(column = 0){
+            //colmnが0の時の動作
+            if(line = 0){
+                //何もしない
+            }else{
+                //行を一つ戻す必要がある
+                do Output.moveCursor(line-1,63);
+            }
+        }else{
+            //通常の動作
+            do Output.moveCursor(line,column-1);
+        }
+        return;
     }
 }
