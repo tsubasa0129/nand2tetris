@@ -1,0 +1,457 @@
+function Screen.init 0
+push constant 16384
+pop static 0
+push constant 1
+neg
+pop static 1
+push constant 16
+call Array.new 1
+pop static 2
+push static 2
+push constant 0
+add
+pop temp 1
+push constant 1
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 1
+add
+pop temp 1
+push constant 2
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 2
+add
+pop temp 1
+push constant 4
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 3
+add
+pop temp 1
+push constant 8
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 4
+add
+pop temp 1
+push constant 16
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 5
+add
+pop temp 1
+push constant 32
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 6
+add
+pop temp 1
+push constant 64
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 7
+add
+pop temp 1
+push constant 128
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 8
+add
+pop temp 1
+push constant 256
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 9
+add
+pop temp 1
+push constant 512
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 10
+add
+pop temp 1
+push constant 1024
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 11
+add
+pop temp 1
+push constant 2048
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 12
+add
+pop temp 1
+push constant 4096
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 13
+add
+pop temp 1
+push constant 8192
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 14
+add
+pop temp 1
+push constant 16384
+push temp 1
+pop pointer 1
+pop that 0
+push static 2
+push constant 15
+add
+pop temp 1
+push constant 16384
+push constant 16384
+add
+push temp 1
+pop pointer 1
+pop that 0
+push constant 0
+return
+function Screen.clearScreen 1
+push constant 16384
+pop local 0
+label while.loop.clearScreen.Screen0
+push local 0
+push constant 24575
+lt
+not
+if-goto while.exit.clearScreen.Screen1
+push local 0
+push constant 0
+call Memory.poke 2
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto while.loop.clearScreen.Screen0
+label while.exit.clearScreen.Screen1
+push constant 0
+return
+function Screen.setColor 0
+push argument 0
+pop static 1
+push constant 0
+return
+function Screen.drawPixel 4
+push argument 0
+push constant 16
+call Math.divide 2
+push constant 32
+push argument 1
+call Math.multiply 2
+add
+push constant 16384
+add
+pop local 0
+push local 0
+call Memory.peek 1
+pop local 1
+push argument 0
+push argument 0
+push constant 16
+call Math.divide 2
+push constant 16
+call Math.multiply 2
+sub
+pop local 3
+push static 1
+not
+if-goto if.false.drawPixel.Screen0
+push local 1
+push static 2
+push local 3
+add
+pop pointer 1
+push that 0
+or
+pop local 2
+goto if-true.drawPixel.Screen1
+label if.false.drawPixel.Screen0
+push local 1
+push static 2
+push local 3
+add
+pop pointer 1
+push that 0
+not
+and
+pop local 2
+label if-true.drawPixel.Screen1
+push local 0
+push local 2
+call Memory.poke 2
+pop temp 0
+push constant 0
+return
+function Screen.drawLine 7
+push argument 2
+push argument 0
+sub
+pop local 0
+push argument 3
+push argument 1
+sub
+pop local 1
+push local 1
+push constant 0
+eq
+not
+if-goto if.false.drawLine.Screen0
+push local 0
+push constant 0
+lt
+not
+if-goto if.false.drawLine.Screen2
+label while.loop.drawLine.Screen4
+push local 2
+push local 0
+gt
+not
+if-goto while.exit.drawLine.Screen5
+push argument 0
+push local 2
+add
+push argument 1
+call Screen.drawPixel 2
+pop temp 0
+push local 2
+push constant 1
+sub
+pop local 2
+goto while.loop.drawLine.Screen4
+label while.exit.drawLine.Screen5
+goto if-true.drawLine.Screen3
+label if.false.drawLine.Screen2
+label while.loop.drawLine.Screen6
+push local 2
+push local 0
+lt
+not
+if-goto while.exit.drawLine.Screen7
+push argument 0
+push local 2
+add
+push argument 1
+call Screen.drawPixel 2
+pop temp 0
+push local 2
+push constant 1
+add
+pop local 2
+goto while.loop.drawLine.Screen6
+label while.exit.drawLine.Screen7
+label if-true.drawLine.Screen3
+goto if-true.drawLine.Screen1
+label if.false.drawLine.Screen0
+label if-true.drawLine.Screen1
+push local 0
+push constant 0
+lt
+not
+if-goto if.false.drawLine.Screen8
+push constant 1
+neg
+pop local 5
+push local 0
+neg
+pop local 0
+goto if-true.drawLine.Screen9
+label if.false.drawLine.Screen8
+push constant 1
+pop local 5
+label if-true.drawLine.Screen9
+push local 1
+push constant 0
+lt
+not
+if-goto if.false.drawLine.Screen10
+push constant 1
+neg
+pop local 6
+push local 1
+neg
+pop local 1
+goto if-true.drawLine.Screen11
+label if.false.drawLine.Screen10
+push constant 1
+pop local 6
+label if-true.drawLine.Screen11
+push constant 0
+pop local 2
+push constant 0
+pop local 3
+push constant 0
+pop local 4
+label while.loop.drawLine.Screen12
+push local 2
+call Math.abs 1
+push local 0
+push constant 1
+add
+lt
+push local 3
+call Math.abs 1
+push local 1
+push constant 1
+add
+lt
+and
+not
+if-goto while.exit.drawLine.Screen13
+push argument 0
+push local 2
+add
+push argument 1
+push local 3
+add
+call Screen.drawPixel 2
+pop temp 0
+push local 0
+push constant 0
+eq
+not
+if-goto if.false.drawLine.Screen14
+push local 3
+push local 6
+add
+pop local 3
+goto if-true.drawLine.Screen15
+label if.false.drawLine.Screen14
+push local 4
+push constant 0
+lt
+not
+if-goto if.false.drawLine.Screen16
+push local 2
+push local 5
+add
+pop local 2
+push local 4
+push local 1
+add
+pop local 4
+goto if-true.drawLine.Screen17
+label if.false.drawLine.Screen16
+push local 3
+push local 6
+add
+pop local 3
+push local 4
+push local 0
+sub
+pop local 4
+label if-true.drawLine.Screen17
+label if-true.drawLine.Screen15
+goto while.loop.drawLine.Screen12
+label while.exit.drawLine.Screen13
+push constant 0
+return
+function Screen.drawRectangle 2
+push argument 3
+push argument 1
+sub
+pop local 0
+push constant 0
+pop local 1
+label while.loop.drawRectangle.Screen0
+push local 1
+push local 0
+push constant 1
+add
+lt
+not
+if-goto while.exit.drawRectangle.Screen1
+push argument 0
+push argument 1
+push local 1
+add
+push argument 2
+push argument 1
+push local 1
+add
+call Screen.drawLine 4
+pop temp 0
+push local 1
+push constant 1
+add
+pop local 1
+goto while.loop.drawRectangle.Screen0
+label while.exit.drawRectangle.Screen1
+push constant 0
+return
+function Screen.drawCircle 3
+push argument 2
+neg
+pop local 2
+label while.loop.drawCircle.Screen0
+push local 2
+push argument 2
+push constant 1
+add
+lt
+not
+if-goto while.exit.drawCircle.Screen1
+push argument 2
+push argument 2
+call Math.multiply 2
+push local 2
+push local 2
+call Math.multiply 2
+sub
+call Math.sqrt 1
+pop local 1
+push argument 0
+push local 1
+sub
+push argument 1
+push local 2
+add
+push argument 0
+push local 1
+add
+push argument 1
+push local 2
+add
+call Screen.drawLine 4
+pop temp 0
+push local 2
+push constant 1
+add
+pop local 2
+goto while.loop.drawCircle.Screen0
+label while.exit.drawCircle.Screen1
+push constant 0
+return
