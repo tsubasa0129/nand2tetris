@@ -37,7 +37,7 @@ class Screen {
         let twoToThe[12] = 4096;
         let twoToThe[13] = 8192;
         let twoToThe[14] = 16384;
-        let twoToThe[15] = 16384 + 16384;
+        let twoToThe[15] = -32767 - 1;
 
         return;
     }
@@ -66,8 +66,9 @@ class Screen {
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
-        var int address,memoryVal,newValue;
+        var int memoryVal,newValue;
         var int remain;
+        var Array address;
 
         //メモリのアドレスとなる
         let address = (x / 16) + (32 * y) + 16384;
@@ -78,7 +79,7 @@ class Screen {
         //位置を取得し、その分シフト移動する
         let remain = x - ((x / 16) * 16);
 
-        //シフト演算で求めた値と現在格納されているメモリの値を論理演算との間で論理演算を行う
+        //シフト演算で求めた値と現在格納されているメモリの値を論理演算との間で論理演算を行う(多分whileでミスしているな)
         if(black){
             let newValue = memoryVal | twoToThe[remain];
         }else{
@@ -141,12 +142,12 @@ class Screen {
             if(dx = 0){
                 let b = b + db;
             }else{
-                if(diff < 0){
-                    let a = a + da;
-                    let diff = diff + dy;
-                }else{
+                if(diff > 0){
                     let b = b + db;
                     let diff = diff - dx;
+                }else{
+                    let a = a + da;
+                    let diff = diff + dy;
                 }
             }
         }

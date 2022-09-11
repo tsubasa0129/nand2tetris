@@ -4,26 +4,19 @@ call Memory.alloc 1
 pop pointer 0
 push argument 0
 push constant 0
-lt
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push constant 14
-call Sys.error 1
-pop temp 0
-label IF_FALSE0
+eq
+not
+if-goto if.false.new.String0
+push constant 1
+pop argument 0
+goto if-true.new.String1
+label if.false.new.String0
+label if-true.new.String1
 push argument 0
-push constant 0
-gt
-if-goto IF_TRUE1
-goto IF_FALSE1
-label IF_TRUE1
-push argument 0
-call Array.new 1
-pop this 1
-label IF_FALSE1
-push argument 0
+call Memory.alloc 1
 pop this 0
+push argument 0
+pop this 1
 push constant 0
 pop this 2
 push pointer 0
@@ -32,16 +25,9 @@ function String.dispose 0
 push argument 0
 pop pointer 0
 push this 0
-push constant 0
-gt
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push this 1
 call Array.dispose 1
 pop temp 0
-label IF_FALSE0
-push pointer 0
+push this 0
 call Memory.deAlloc 1
 pop temp 0
 push constant 0
@@ -55,85 +41,65 @@ function String.charAt 0
 push argument 0
 pop pointer 0
 push argument 1
-push constant 0
-lt
-push argument 1
-push this 2
-gt
-or
-push argument 1
-push this 2
-eq
-or
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push constant 15
-call Sys.error 1
-pop temp 0
-label IF_FALSE0
-push argument 1
 push this 1
+lt
+not
+if-goto if.false.charAt.String0
+push this 0
+push argument 1
 add
 pop pointer 1
 push that 0
 return
+goto if-true.charAt.String1
+label if.false.charAt.String0
+push constant 0
+return
+label if-true.charAt.String1
 function String.setCharAt 0
 push argument 0
 pop pointer 0
 push argument 1
-push constant 0
-lt
-push argument 1
-push this 2
-gt
-or
-push argument 1
-push this 2
-eq
-or
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push constant 16
-call Sys.error 1
-pop temp 0
-label IF_FALSE0
-push argument 1
 push this 1
+lt
+not
+if-goto if.false.setCharAt.String0
+push this 0
+push argument 1
 add
+pop temp 1
 push argument 2
-pop temp 0
+push temp 1
 pop pointer 1
-push temp 0
 pop that 0
+goto if-true.setCharAt.String1
+label if.false.setCharAt.String0
+label if-true.setCharAt.String1
 push constant 0
 return
 function String.appendChar 0
 push argument 0
 pop pointer 0
 push this 2
-push this 0
-eq
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push constant 17
-call Sys.error 1
-pop temp 0
-label IF_FALSE0
-push this 2
 push this 1
+lt
+not
+if-goto if.false.appendChar.String0
+push this 0
+push this 2
 add
+pop temp 1
 push argument 1
-pop temp 0
+push temp 1
 pop pointer 1
-push temp 0
 pop that 0
 push this 2
 push constant 1
 add
 pop this 2
+goto if-true.appendChar.String1
+label if.false.appendChar.String0
+label if-true.appendChar.String1
 push pointer 0
 return
 function String.eraseLastChar 0
@@ -141,245 +107,204 @@ push argument 0
 pop pointer 0
 push this 2
 push constant 0
-eq
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push constant 18
-call Sys.error 1
-pop temp 0
-label IF_FALSE0
+gt
+not
+if-goto if.false.eraseLastChar.String0
+push this 0
+push this 2
+push constant 1
+sub
+add
+pop temp 1
+push constant 0
+push temp 1
+pop pointer 1
+pop that 0
 push this 2
 push constant 1
 sub
 pop this 2
+goto if-true.eraseLastChar.String1
+label if.false.eraseLastChar.String0
+label if-true.eraseLastChar.String1
 push constant 0
 return
-function String.intValue 5
+function String.intValue 4
 push argument 0
 pop pointer 0
-push this 2
 push constant 0
-eq
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push constant 0
-return
-label IF_FALSE0
-push constant 0
-not
 pop local 3
 push constant 0
-push this 1
+pop local 0
+push constant 0
+pop local 1
+push constant 0
+pop local 2
+push this 0
+push local 0
 add
 pop pointer 1
 push that 0
 push constant 45
 eq
-if-goto IF_TRUE1
-goto IF_FALSE1
-label IF_TRUE1
-push constant 0
 not
-pop local 4
+if-goto if.false.intValue.String0
 push constant 1
-pop local 0
-label IF_FALSE1
-label WHILE_EXP0
+neg
+pop local 3
 push local 0
-push this 2
-lt
-push local 3
-and
-not
-if-goto WHILE_END0
+push constant 1
+add
+pop local 0
+goto if-true.intValue.String1
+label if.false.intValue.String0
+label if-true.intValue.String1
+label while.loop.intValue.String2
 push local 0
 push this 1
+lt
+push this 0
+push local 0
+add
+pop pointer 1
+push that 0
+push constant 47
+gt
+and
+push this 0
+push local 0
+add
+pop pointer 1
+push that 0
+push constant 58
+lt
+and
+not
+if-goto while.exit.intValue.String3
+push this 0
+push local 0
 add
 pop pointer 1
 push that 0
 push constant 48
 sub
-pop local 2
+pop local 1
 push local 2
-push constant 0
-lt
-push local 2
-push constant 9
-gt
-or
-not
-pop local 3
-push local 3
-if-goto IF_TRUE2
-goto IF_FALSE2
-label IF_TRUE2
-push local 1
 push constant 10
 call Math.multiply 2
-push local 2
+push local 1
 add
-pop local 1
+pop local 2
 push local 0
 push constant 1
 add
 pop local 0
-label IF_FALSE2
-goto WHILE_EXP0
-label WHILE_END0
-push local 4
-if-goto IF_TRUE3
-goto IF_FALSE3
-label IF_TRUE3
-push local 1
+goto while.loop.intValue.String2
+label while.exit.intValue.String3
+push local 3
+not
+if-goto if.false.intValue.String4
+push constant 1
 neg
-pop local 1
-label IF_FALSE3
-push local 1
+push local 2
+call Math.multiply 2
 return
+goto if-true.intValue.String5
+label if.false.intValue.String4
+push local 2
+return
+label if-true.intValue.String5
 function String.setInt 4
 push argument 0
 pop pointer 0
-push this 0
 push constant 0
-eq
-if-goto IF_TRUE0
-goto IF_FALSE0
-label IF_TRUE0
-push constant 19
-call Sys.error 1
-pop temp 0
-label IF_FALSE0
-push constant 6
-call Array.new 1
-pop local 2
+pop this 2
+push constant 5
+call String.new 1
+pop local 3
 push argument 1
 push constant 0
 lt
-if-goto IF_TRUE1
-goto IF_FALSE1
-label IF_TRUE1
-push constant 0
 not
-pop local 3
+if-goto if.false.setInt.String0
 push argument 1
 neg
 pop argument 1
-label IF_FALSE1
+push pointer 0
+push constant 45
+call String.appendChar 2
+pop temp 0
+goto if-true.setInt.String1
+label if.false.setInt.String0
+label if-true.setInt.String1
 push argument 1
-pop local 1
-label WHILE_EXP0
-push local 1
+push constant 10
+lt
+not
+if-goto if.false.setInt.String2
+push pointer 0
+push argument 1
+push constant 48
+add
+call String.appendChar 2
+pop temp 0
+goto if-true.setInt.String3
+label if.false.setInt.String2
+push constant 0
+pop local 0
+label while.loop.setInt.String4
+push argument 1
 push constant 0
 gt
 not
-if-goto WHILE_END0
+if-goto while.exit.setInt.String5
 push argument 1
 push constant 10
 call Math.divide 2
-pop local 1
-push local 0
-push local 2
-add
-push constant 48
+pop local 2
 push argument 1
-push local 1
+push local 2
 push constant 10
 call Math.multiply 2
 sub
-add
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push local 0
-push constant 1
-add
-pop local 0
-push local 1
-pop argument 1
-goto WHILE_EXP0
-label WHILE_END0
+pop local 1
 push local 3
-if-goto IF_TRUE2
-goto IF_FALSE2
-label IF_TRUE2
-push local 0
-push local 2
+push local 1
+push constant 48
 add
-push constant 45
+call String.appendChar 2
 pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
+push argument 1
+push constant 10
+call Math.divide 2
+pop argument 1
 push local 0
 push constant 1
 add
 pop local 0
-label IF_FALSE2
-push this 0
-push local 0
-lt
-if-goto IF_TRUE3
-goto IF_FALSE3
-label IF_TRUE3
-push constant 19
-call Sys.error 1
-pop temp 0
-label IF_FALSE3
+goto while.loop.setInt.String4
+label while.exit.setInt.String5
+label while.loop.setInt.String6
 push local 0
 push constant 0
-eq
-if-goto IF_TRUE4
-goto IF_FALSE4
-label IF_TRUE4
-push constant 0
-push this 1
-add
-push constant 48
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 1
-pop this 2
-goto IF_END4
-label IF_FALSE4
-push constant 0
-pop this 2
-label WHILE_EXP1
-push this 2
-push local 0
-lt
+gt
 not
-if-goto WHILE_END1
-push this 2
-push this 1
-add
+if-goto while.exit.setInt.String7
+push pointer 0
+push local 3
 push local 0
-push this 2
 push constant 1
-add
 sub
-push local 2
-add
-pop pointer 1
-push that 0
+call String.charAt 2
+call String.appendChar 2
 pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push this 2
+push local 0
 push constant 1
-add
-pop this 2
-goto WHILE_EXP1
-label WHILE_END1
-label IF_END4
-push local 2
-call Array.dispose 1
-pop temp 0
+sub
+pop local 0
+goto while.loop.setInt.String6
+label while.exit.setInt.String7
+label if-true.setInt.String3
 push constant 0
 return
 function String.newLine 0
