@@ -1,4 +1,6 @@
 function Sys.init 0
+call Memory.init 0
+pop temp 0
 call Math.init 0
 pop temp 0
 call Output.init 0
@@ -7,9 +9,9 @@ call Screen.init 0
 pop temp 0
 call Keyboard.init 0
 pop temp 0
-call Memory.init 0
-pop temp 0
 call Main.main 0
+pop temp 0
+call Sys.halt 0
 pop temp 0
 push constant 0
 return
@@ -23,17 +25,29 @@ goto while.loop.halt.Sys0
 label while.exit.halt.Sys1
 push constant 0
 return
-function Sys.wait 1
+function Sys.wait 2
 push constant 0
 pop local 0
 label while.loop.wait.Sys0
 push local 0
 push argument 0
 lt
-push constant 1
-call Math.multiply 2
 not
 if-goto while.exit.wait.Sys1
+push constant 0
+pop local 1
+label while.loop.wait.Sys2
+push local 1
+push constant 93
+lt
+not
+if-goto while.exit.wait.Sys3
+push local 1
+push constant 1
+add
+pop local 1
+goto while.loop.wait.Sys2
+label while.exit.wait.Sys3
 push local 0
 push constant 1
 add

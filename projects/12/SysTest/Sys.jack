@@ -10,13 +10,14 @@ class Sys {
 
     /** Performs all the initializations required by the OS. */
     function void init() {
+        do Memory.init();
         do Math.init();
         do Output.init();
         do Screen.init();
         do Keyboard.init();
-        do Memory.init();
 
         do Main.main();
+        do Sys.halt();
 
         return;
     }
@@ -30,11 +31,16 @@ class Sys {
 
     /** Waits approximately duration milliseconds and returns.  */
     function void wait(int duration) {
-        var int delay;
-        let delay = 0;
+        var int i,j;
+        let i = 0;
 
-        while(delay < duration * 1){
-            let delay = delay + 1;
+        while(i < duration){
+            let j = 0;
+
+            while(j < 93){
+                let j = j + 1;
+            }
+            let i = i + 1;
         }
 
         return;
